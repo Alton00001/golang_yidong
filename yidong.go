@@ -33,9 +33,18 @@ func modifyWindow(packet gopacket.Packet) {
 	tcp, _ := tcpLayer.(*layers.TCP)
 
 	if tcp.SYN {
-		tcp.Window = uint16(windowSize)
-		ip.FixChecksums()
-		tcp.SetNetworkLayerForChecksum(ip)
+		// 设置 TCP 窗口大小
+        	tcp.Window = uint16(windowSize)
+
+        	// 计算 IPv4 报文的校验和
+        	ipChecksum := layers.IPv4Checksum(ip.LayerContents())
+        	ip.Checksum = ipChecksum
+
+	        // 计算 TCP 报文的校验和
+	        tcpChecksum := layers.TCPChecksum(ip, tcp)
+	        tcp.SetNetworkLayerForChecksum(ip)
+	        tcp.SetNetworkLayerForChecksum(ip)
+	        tcp.Checksum = tcpChecksum
 	}
 }
 
